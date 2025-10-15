@@ -1,0 +1,989 @@
+/* Wire Components - مع إصلاحات للحصول على خطوط مستقيمة تماماً */
+.wires-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    shape-rendering: geometricPrecision;
+}
+
+.wire-line {
+    pointer-events: all;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.5));
+    shape-rendering: geometricPrecision;
+    stroke-linecap: butt;
+    stroke-linejoin: miter;
+    vector-effect: non-scaling-stroke;
+}
+
+.wire-line:hover {
+    filter: drop-shadow(0 0 3px #ff6b6b);
+    stroke-width: 2.5 !important;
+}
+
+.wire-line.high-state {
+    stroke: #00ff41;
+    stroke-width: 4;
+}
+
+/* ⭐ تأثيرات خاصة للاتصالات المجسورة */
+.wire-line.bridged-connection {
+    stroke-dasharray: 5,3;
+    animation: bridge-pulse 2s infinite;
+}
+
+/* ⭐ تأثيرات خاصة للاتصالات الداخلية */
+.wire-line.internal-bridge {
+    stroke-dasharray: 3,2;
+    animation: internal-bridge-pulse 1.5s infinite;
+    filter: drop-shadow(0 0 2px rgba(255, 165, 0, 0.8));
+}
+
+@keyframes bridge-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@keyframes internal-bridge-pulse {
+    0%, 100% { opacity: 1; stroke-width: 3; }
+    50% { opacity: 0.8; stroke-width: 4; }
+}
+
+/* ⭐ تأثيرات خاصة للـ T mode (J↔K bridge) */
+.wire-line.t-mode-bridge {
+    stroke: #ff6b35 !important;
+    stroke-dasharray: 4,2,1,2;
+    animation: t-mode-pulse 1s infinite;
+    filter: drop-shadow(0 0 3px rgba(255, 107, 53, 0.8));
+}
+
+.wire-line.t-mode-bridge.high-state {
+    stroke: #00ff41 !important;
+    stroke-width: 5;
+    filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.9));
+}
+
+@keyframes t-mode-pulse {
+    0%, 100% { opacity: 1; stroke-width: 4; }
+    50% { opacity: 0.9; stroke-width: 5; }
+}
+
+.wire-line.low-state {
+    stroke: #666;
+    stroke-width: 2;
+    opacity: 0.6;
+    filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.3));
+}
+
+.wire-line.animated {
+    animation: wireFlow 1s ease-in-out;
+}
+
+/* Temp wire - مع إصلاحات للخطوط المستقيمة */
+.temp-wire line {
+    stroke: #ffff00;
+    stroke-width: 2;
+    opacity: 0.6;
+    stroke-dasharray: 4,4;
+    animation: marchingAnts 1s linear infinite;
+    shape-rendering: geometricPrecision;
+    stroke-linecap: butt;
+    vector-effect: non-scaling-stroke;
+}
+
+/* باقي الـ CSS كما هو - نفس الكود السابق */
+.gate-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2px;
+    gap: 1px;
+    direction: ltr;
+    min-height: 35px;
+    transition: all 0.2s ease;
+}
+
+.gate-wrapper:hover {
+    transform: translateY(-1px);
+}
+
+.gate-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.02);
+    transition: all 0.3s ease;
+}
+
+.gate-container:hover {
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.gate {
+    width: 24px;
+    height: 26px;
+    background: #333;
+    border: 2px solid #666;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 10px;
+    color: #ccc;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.gate::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.gate:hover::before {
+    left: 100%;
+}
+
+.gate.active {
+    color: white;
+    animation: gateActivePulse 2s ease-in-out infinite;
+}
+
+/* AND Gate Styles */
+.and-gate {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    border-color: #34495e;
+}
+
+.and-gate.active {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border-color: #2980b9;
+    box-shadow: 0 0 12px rgba(52, 152, 219, 0.6);
+}
+
+/* OR Gate Styles */
+.or-gate {
+    background: linear-gradient(135deg, #16a085, #1abc9c);
+    border-color: #1abc9c;
+}
+
+.or-gate.active {
+    background: linear-gradient(135deg, #e67e22, #f39c12);
+    border-color: #f39c12;
+    box-shadow: 0 0 12px rgba(243, 156, 18, 0.6);
+}
+
+/* AB+CD Gate Styles */
+.ab-cd-gate {
+    background: linear-gradient(135deg, #8e44ad, #9b59b6);
+    border-color: #9b59b6;
+    font-size: 8px;
+}
+
+.ab-cd-gate.active {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    border-color: #c0392b;
+    box-shadow: 0 0 12px rgba(231, 76, 60, 0.6);
+}
+
+/* XOR Gate Styles */
+.xor-gate {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    border-color: #e67e22;
+}
+
+.xor-gate.active {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    border-color: #27ae60;
+    box-shadow: 0 0 12px rgba(46, 204, 113, 0.6);
+}
+
+/* XNOR Gate Styles */
+.xnor-gate {
+    background: linear-gradient(135deg, #34495e, #2c3e50);
+    border-color: #2c3e50;
+}
+
+.xnor-gate.active {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    border-color: #8e44ad;
+    box-shadow: 0 0 12px rgba(155, 89, 182, 0.6);
+}
+
+/* NOT Gate Styles */
+.not-gate {
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    border-color: #7f8c8d;
+    position: relative;
+}
+
+.not-gate.active {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    border-color: #d35400;
+    box-shadow: 0 0 12px rgba(230, 126, 34, 0.6);
+}
+
+.not-gate::after {
+    content: '○';
+    position: absolute;
+    right: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 5px;
+    color: #ccc;
+    background: #333;
+    border-radius: 50%;
+    width: 7px;
+    height: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #666;
+}
+
+.not-gate.active::after {
+    color: white;
+    background: #d35400;
+    border-color: #d35400;
+}
+
+/* Gate Inputs */
+.gate-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-end;
+    min-height: 26px;
+    justify-content: center;
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    direction: rtl;
+    transition: all 0.2s ease;
+}
+
+.input-wrapper:hover {
+    transform: translateX(-1px);
+}
+
+.input-label {
+    font-size: 7px;
+    color: #a9a9a9;
+    font-weight: bold;
+    min-width: 5px;
+    text-align: center;
+    order: 2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    transition: color 0.2s ease;
+}
+
+.input-wrapper:hover .input-label {
+    color: #e0e0e0;
+}
+
+.gate-input-point {
+    width: 6px;
+    height: 6px;
+    order: 1;
+}
+
+/* Gate Outputs */
+.gate-outputs {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+}
+
+.output-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    direction: ltr;
+    transition: all 0.2s ease;
+}
+
+.output-wrapper:hover {
+    transform: translateX(1px);
+}
+
+.output-label {
+    font-size: 7px;
+    color: #a9a9a9;
+    font-weight: bold;
+    min-width: 8px;
+    text-align: center;
+    order: 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    transition: color 0.2s ease;
+}
+
+.output-wrapper:hover .output-label {
+    color: #e0e0e0;
+}
+
+.gate-output-point {
+    width: 6px;
+    height: 6px;
+    order: 2;
+}
+
+.gate-label {
+    font-size: 6px;
+    color: #a9a9a9;
+    text-align: center;
+    font-weight: bold;
+    margin-top: 1px;
+    padding: 1px 2px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s ease;
+    max-width: 40px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gate-wrapper:hover .gate-label {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+}
+
+/* 4-bit Adder Gate Styles */
+.adder-4bit-gate {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    border-color: #c0392b;
+    font-size: 10px;
+    width: 32px;
+    height: 60px;
+    font-weight: bold;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.adder-4bit-gate.active {
+    background: linear-gradient(135deg, #f39c12, #d68910);
+    border-color: #d68910;
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.6);
+}
+
+.gate-wrapper:has(.adder-4bit-gate) {
+    min-height: 80px;
+}
+
+.gate-wrapper:has(.adder-4bit-gate) .gate-inputs {
+    gap: 1px;
+    min-height: 60px;
+}
+
+.gate-wrapper:has(.adder-4bit-gate) .gate-outputs {
+    gap: 2px;
+}
+
+.gate-wrapper:has(.adder-4bit-gate) .input-label,
+.gate-wrapper:has(.adder-4bit-gate) .output-label {
+    font-size: 6px;
+}
+
+.adder-4bit-gate::before {
+    content: '4-bit';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 5px;
+    color: #ffb3ba;
+    font-weight: bold;
+}
+
+/* 4-bit Comparator Gate Styles */
+.comp-4bit-gate {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    border-color: #8e44ad;
+    font-size: 8px;
+    width: 30px;
+    height: 55px;
+    font-weight: bold;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.comp-4bit-gate.active {
+    background: linear-gradient(135deg, #f39c12, #d68910);
+    border-color: #d68910;
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.6);
+}
+
+.comp-symbols {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5px;
+}
+
+.comp-symbol {
+    font-size: 8px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+/* Basic Comparator Gate Styles */
+.comp-basic-gate {
+    background: linear-gradient(135deg, #8e44ad, #9b59b6);
+    border-color: #9b59b6;
+    font-size: 6px;
+    width: 28px;
+    height: 22px;
+    font-weight: bold;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.comp-basic-gate.active {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    border-color: #d35400;
+    box-shadow: 0 0 10px rgba(230, 126, 34, 0.6);
+}
+
+/* Power Rails Styles */
+.power-rail-wrapper {
+    margin: 2px 0;
+    padding: 3px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.power-rail-wrapper.power-high {
+    border-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+}
+
+.power-rail-wrapper.power-low {
+    border-color: #2c3e50;
+    background: rgba(44, 62, 80, 0.1);
+}
+
+.power-rail-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+}
+
+.power-rail-label {
+    font-size: 6px;
+    font-weight: bold;
+    color: #a9a9a9;
+    text-align: center;
+    margin-bottom: 1px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.power-high .power-rail-label {
+    color: #ff6b6b;
+}
+
+.power-low .power-rail-label {
+    color: #95a5a6;
+}
+
+.power-rail-line {
+    width: 100%;
+    height: 2px;
+    border-radius: 1px;
+    position: relative;
+}
+
+.power-high .power-rail-line {
+    background: linear-gradient(90deg, #e74c3c, #c0392b);
+    box-shadow: 0 0 5px rgba(231, 76, 60, 0.5);
+}
+
+.power-low .power-rail-line {
+    background: linear-gradient(90deg, #2c3e50, #34495e);
+    box-shadow: 0 0 3px rgba(44, 62, 80, 0.5);
+}
+
+.power-rail-points {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 2px;
+}
+
+.power-point-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.power-rail-point {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.power-high .power-rail-point {
+    background: #e74c3c;
+    border: 1px solid #c0392b;
+}
+
+.power-low .power-rail-point {
+    background: #2c3e50;
+    border: 1px solid #34495e;
+}
+
+.power-rail-point:hover {
+    transform: scale(1.2);
+}
+
+.power-rail-point.connected {
+    box-shadow: 0 0 4px rgba(0, 255, 65, 0.8);
+    border-color: #00ff41;
+}
+
+.gate-wrapper:has(.comp-4bit-gate) {
+    min-height: 70px;
+}
+
+.gate-wrapper:has(.comp-4bit-gate) .gate-inputs {
+    gap: 1px;
+    min-height: 55px;
+}
+
+.gate-wrapper:has(.comp-4bit-gate) .gate-outputs {
+    gap: 2px;
+}
+
+.gate-wrapper:has(.comp-4bit-gate) .input-label,
+.gate-wrapper:has(.comp-4bit-gate) .output-label {
+    font-size: 6px;
+}
+
+.gate-wrapper:has(.comp-basic-gate) {
+    min-height: 30px;
+}
+
+.gate-wrapper:has(.comp-basic-gate) .gate-inputs {
+    gap: 2px;
+    min-height: 22px;
+}
+
+.gate-wrapper:has(.comp-basic-gate) .gate-outputs {
+    gap: 2px;
+}
+
+.gate-wrapper:has(.comp-basic-gate) .input-label,
+.gate-wrapper:has(.comp-basic-gate) .output-label {
+    font-size: 6px;
+}
+
+/* Connection Points */
+.connection-point {
+    width: 6px;
+    height: 6px;
+    background: #333;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid #666;
+    transition: all 0.2s ease;
+    position: relative;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.connection-point:hover {
+    background: #e94560;
+    border-color: #e94560;
+    transform: scale(1.15);
+    box-shadow: 0 0 3px rgba(233, 69, 96, 0.6);
+}
+
+.connection-point.connected {
+    background: #00ff41;
+    border-color: #00ff41;
+    box-shadow: 0 0 2px rgba(0, 255, 65, 0.5);
+}
+
+.connection-point.highlighted {
+    background: #ffff00 !important;
+    border-color: #ffff00 !important;
+    animation: connectionPulse 0.8s ease-in-out infinite alternate;
+    transform: scale(1.15);
+}
+
+.connection-point-label {
+    font-size: 7px;
+    font-weight: bold;
+    color: #a9a9a9;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Delete Button */
+.delete-button {
+    position: absolute;
+    background: linear-gradient(135deg, #ff4757, #ff3742);
+    color: white;
+    padding: 3px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 7px;
+    font-weight: bold;
+    border: 1px solid #ff3742;
+    box-shadow: 
+        0 2px 6px rgba(255, 71, 87, 0.4),
+        0 1px 3px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    user-select: none;
+    transform: translate(-50%, -100%);
+    margin-top: -5px;
+    transition: all 0.2s ease;
+}
+
+.delete-button:hover {
+    background: linear-gradient(135deg, #ff3742, #e63946);
+    transform: translate(-50%, -100%) scale(1.05);
+    box-shadow: 
+        0 3px 9px rgba(255, 71, 87, 0.6),
+        0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.delete-button:active {
+    transform: translate(-50%, -100%) scale(0.95);
+}
+
+/* Animations */
+@keyframes connectionPulse {
+    from {
+        box-shadow: 0 0 0 0 rgba(255, 255, 0, 0.7);
+    }
+    to {
+        box-shadow: 0 0 0 3px rgba(255, 255, 0, 0);
+    }
+}
+
+@keyframes gateActivePulse {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 12px rgba(52, 152, 219, 0.8);
+    }
+}
+
+@keyframes wireFlow {
+    0% {
+        stroke-dasharray: 5, 2;
+        stroke-dashoffset: 0;
+    }
+    100% {
+        stroke-dashoffset: 7;
+    }
+}
+
+@keyframes marchingAnts {
+    to {
+        stroke-dashoffset: -8;
+    }
+}
+
+/* Performance optimizations */
+.gate,
+.connection-point,
+.wire-line {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+    .gates-section {
+        width: 550px;
+    }
+    
+    #gates-container {
+        gap: 6px;
+    }
+    
+    .gates-column {
+        min-width: 100px;
+        max-width: 130px;
+    }
+    
+    .adder-4bit-gate {
+        font-size: 10px !important;
+        width: 30px;
+        height: 55px;
+    }
+    
+    .comp-4bit-gate {
+        font-size: 8px !important;
+        width: 28px;
+        height: 50px;
+    }
+    
+    .comp-basic-gate {
+        font-size: 7px !important;
+        width: 26px;
+        height: 20px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .gates-section {
+        width: 85%;
+        max-width: 500px;
+    }
+    
+    .gate {
+        width: 20px;
+        height: 24px;
+        font-size: 9px;
+    }
+    
+    .not-gate::after {
+        width: 6px;
+        height: 6px;
+        right: -4px;
+        font-size: 4px;
+    }
+    
+    #gates-container {
+        gap: 5px;
+    }
+    
+    .gates-column {
+        min-width: 90px;
+        max-width: 110px;
+    }
+    
+    .adder-4bit-gate {
+        font-size: 9px !important;
+        width: 28px;
+        height: 50px;
+    }
+    
+    .comp-4bit-gate {
+        font-size: 7px !important;
+        width: 26px;
+        height: 45px;
+    }
+    
+    .comp-basic-gate {
+        font-size: 6px !important;
+        width: 24px;
+        height: 18px;
+    }
+    
+    .comp-symbol {
+        font-size: 8px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .gate-wrapper {
+        min-height: 30px;
+        margin-bottom: 2px;
+    }
+    
+    .gate {
+        width: 18px;
+        height: 22px;
+        font-size: 8px;
+    }
+    
+    .not-gate::after {
+        width: 5px;
+        height: 5px;
+        right: -3px;
+        font-size: 3px;
+    }
+    
+    .gate-container {
+        gap: 2px;
+    }
+    
+    .input-wrapper, .output-wrapper {
+        gap: 1px;
+    }
+    
+    .gates-section {
+        padding: 5px;
+    }
+    
+    #gates-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .gates-column {
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 5px;
+        margin-bottom: 5px;
+        width: 100%;
+        max-width: none;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 5px;
+    }
+    
+    .left-column, .middle-column {
+        padding-right: 0;
+    }
+    
+    .right-column {
+        padding-left: 0;
+    }
+    
+    .adder-4bit-gate {
+        font-size: 7px !important;
+        width: 24px;
+        height: 42px;
+    }
+    
+    .comp-4bit-gate {
+        font-size: 6px !important;
+        width: 22px;
+        height: 38px;
+    }
+    
+    .comp-basic-gate {
+        font-size: 5px !important;
+        width: 20px;
+        height: 16px;
+    }
+    
+    .comp-symbol {
+        font-size: 6px !important;
+    }
+    
+    .gate-wrapper:has(.adder-4bit-gate) {
+        min-height: 60px;
+    }
+    
+    .gate-wrapper:has(.comp-4bit-gate) {
+        min-height: 50px;
+    }
+    
+    .gate-wrapper:has(.comp-basic-gate) {
+        min-height: 25px;
+    }
+    
+    .power-rail-wrapper {
+        margin: 1px 0;
+        padding: 2px;
+    }
+    
+    .power-rail-line {
+        height: 1px;
+    }
+    
+    .power-rail-point {
+        width: 2px;
+        height: 2px;
+    }
+}
+
+/* Accessibility */
+.connection-point:focus,
+.toggle-switch:focus,
+.gate:focus {
+    outline: 1px solid #e94560;
+    outline-offset: 1px;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .connection-point {
+        border-width: 2px;
+    }
+    
+    .gate {
+        border-width: 2px;
+    }
+    
+    .wire-line.high-state {
+        stroke-width: 2.5;
+    }
+    
+    .wire-line.low-state {
+        stroke-width: 1.5;
+    }
+}
+
+/* Performance optimizations for ultra-compact layout */
+@media (prefers-reduced-motion: reduce) {
+    .connection-point,
+    .toggle-switch,
+    .gate,
+    .led,
+    .wire-line {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+.gate-wrapper {
+    position: relative;
+    box-sizing: border-box;
+}
+
+.gate-inputs .input-wrapper:not(:last-child) {
+    margin-bottom: 0.5px;
+}
+
+.gate-outputs .output-wrapper:not(:last-child) {
+    margin-bottom: 0.5px;
+}
+
+.gate-input-point,
+.gate-output-point {
+    margin: 0;
+    padding: 0;
+}
+
+.gate-wrapper .connection-point {
+    min-width: 6px;
+    min-height: 6px;
+    max-width: 6px;
+    max-height: 6px;
+}
+
+.gates-section .gates-column {
+    box-sizing: border-box;
+}
+
+.gate-container * {
+    box-sizing: border-box;
+}
+
+.gate-label,
+.input-label,
+.output-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
